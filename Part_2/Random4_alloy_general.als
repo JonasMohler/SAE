@@ -302,8 +302,10 @@ pred static_instance_3 {
 }
 
 pred static_instance_4 {
-	//TODO
-	//probably should not be possible
+//TODO: check
+	some a: Athlete, d: Discipline | some disj t, t': Team | a in t.members and a in t'.members and
+										t in d.event.teams and t' in d.event.teams and
+										isGoldMedal[t.medals] and isGoldMedal[t'.medals]
 	
 }
 
