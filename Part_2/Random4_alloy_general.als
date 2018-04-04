@@ -178,7 +178,16 @@ fact one_performance_per_time_per_place {
 
 }
 
+//if a team starts for a country, all the athletes of that team must be citizens of that country
+fact athletes_in_same_country_as_team{
+	all t:Team | all a:t.members | t.country in a.citizenOf  
+}
 
+//being an athlete of a country means being a citizen of that country
+
+fact starting_for_country_reqs_citizenship {
+	all c:Country,a:Athlete | a in c.athletes implies c in a.citizenOf
+}
 
 
 
@@ -289,7 +298,7 @@ pred static_instance_4 {
 	
 }
 
-run static_instance_2
+run static_instance_3
 
 
 
