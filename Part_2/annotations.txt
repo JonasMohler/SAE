@@ -1,0 +1,30 @@
+General
+
+an athlete should only be able to participate in one team per event right?
+
+sig:
+S: inPhase: should be formulated as a fact
+
+facts:
+
+startTime_not_endTime
+J: i think this should already be covered by phase/time properties
+S: i think so too; didnt test it though
+
+
+events_in_one_discipline
+S: i think that's to restrictive, ie there should be more than one discipline in a event
+
+instances:
+
+4
+not sure about this one
+
+run:
+
+can be run with upper bound, should be done to do for checking
+
+Ski Jumping
+
+
+
