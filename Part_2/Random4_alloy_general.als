@@ -184,9 +184,18 @@ fact athletes_in_same_country_as_team{
 }
 
 //being an athlete of a country means being a citizen of that country
-
 fact starting_for_country_reqs_citizenship {
 	all c:Country,a:Athlete | a in c.athletes implies c in a.citizenOf
+}
+
+//athletes start in exactly one team
+fact no_start_without_team {
+	all a:Athlete | some t:Team | a in t.members
+	all a:Athlete, disj t,t':Team | a in t.members implies a not in t'.members
+}
+//athletes represent only the country of the team they're in
+fact team_country_athletes {
+	all a:Athlete,t:Team,c:Country | a in c.athletes iff (a in t.members and t.country = c)
 }
 
 
@@ -298,7 +307,7 @@ pred static_instance_4 {
 	
 }
 
-run static_instance_3
+run static_instance_2
 
 
 
