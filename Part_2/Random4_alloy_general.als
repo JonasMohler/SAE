@@ -59,7 +59,6 @@ sig Performance {
 sig Phase {
 	performance: set Performance,
 	nextPhase: lone Phase,
-
 }
 
 sig Team {
@@ -113,7 +112,7 @@ fact performance_phase_relation {
 }
 
 
-// True iff score only exists if its performance exists
+// A score only exists iff its performance exists
 fact score_only_exists_with_its_performance {
 	all s: Score | one p: Performance | s = p.score
 }
@@ -123,17 +122,17 @@ fact performance_is_only_in_one_phase {
 }
 
 
-// True iff a performance only exists as part of a phase
+// A performance should only exists as part of a phase
 fact performace_part_of_a_phase {
 	all pe: Performance | some pa: Phase | pe in pa.performance
 }
 
-// True iff a location has some performances
+// A location must have some performances
 fact location_has_some_performances {
 	all l: Location | some p: Performance | l = p.location
 }
 
-// True iff medals are correctly distributed
+//  Medals are correctly distributed
 fact medal_distribution {
 	all e:Event | #(GoldMedal & e.medals) >= 1
 	all e: Event | #(GoldMedal & e.medals) = 1 implies ((#(SilverMedal & e.medals) = 1 and #(BronzeMedal & e.medals) >= 1) or (#(SilverMedal & e.medals) >= 2 and #(BronzeMedal & e.medals) = 0))
@@ -141,26 +140,27 @@ fact medal_distribution {
 	all e:Event | #(GoldMedal & e.medals) >= 3 implies (#(SilverMedal & e.medals) = 0 and #(BronzeMedal & e.medals) = 0)
 }
 
-
+//times are ordered 
 fact rules_of_time {
 
-	//times are ordered 
 	all disj t,t':Time | t in t'.^after implies (t' not in t.^after)
 	all t:Time | t != t.after
 	no disj t,t':Time | t.after = t'.after
 }
 
+//phases are ordered
 fact ordering_of_phases {
 	all disj p,p':Phase | p in p'.nextPhase implies (p' not in p.nextPhase)
 	all p:Phase | p != p.nextPhase
 }
 
+// phases are also ordered by time
 fact phase_time_ordering {
 	all disj ph1,ph2:Phase|all pe1:ph1.performance,pe2:ph2.performance | ph2 in ph1.nextPhase implies pe2.startTime in pe1.endTime.^after
 }
 
 
-// True iff at least 3 medals & 3 teams per event
+// There must be at least 3 medals & 3 teams per event
 fact three_medals_and_teams_per_event {
 	all e: Event | #e.medals >= 3 and #e.teams >= 3
 }
@@ -184,7 +184,6 @@ fact athletes_in_same_country_as_team{
 }
 
 //being an athlete of a country means being a citizen of that country
-
 fact starting_for_country_reqs_citizenship {
 	all c:Country,a:Athlete | a in c.athletes implies c in a.citizenOf
 }
@@ -203,23 +202,22 @@ pred isBefore[t1, t2: Time] {
 
 // True iff p1 is strictly before p2.
 pred phaseIsBefore[p1, p2: Phase] {
-
 	p2 in p1.^nextPhase and not p1 in p2.^nextPhase
 }
 
 // True iff m is a gold medal.
 pred isGoldMedal[m : Medal] {
-	m in GoldMedal
+	m in GoldMedal and #m >= 1
 }
 
 // True iff m is a silver medal.
 pred isSilverMedal[m : Medal] {
-	m in SilverMedal
+	m in SilverMedal and #m >= 1
 }
 
 // True iff m is a bronze medal.
 pred isBronzeMedal[m: Medal] {
-	m in BronzeMedal
+	m in BronzeMedal and #m >= 1
 }
 
 // True iff t is among the best teams in phase p.
@@ -293,12 +291,14 @@ pred static_instance_3 {
 }
 
 pred static_instance_4 {
-	//TODO
-	//probably should not be possible
+	//TODO: check
+	some a: Athlete, d: Discipline | some disj t, t': Team | a in t.members and a in t'.members and
+										t in d.event.teams and t' in d.event.teams and
+										isGoldMedal[t.medals] and isGoldMedal[t'.medals]
 	
 }
 
-run static_instance_3
+run static_instance_4
 
 
 
