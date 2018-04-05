@@ -69,6 +69,21 @@ sig Time {
 * facts
 */
 
+// event only exists as a part of a discipline
+fact event_only_with_discipline {
+	all e: Event | one d: Discipline | e = d.event
+}
+
+//phase only exists as a part of an event
+fact phase_only_with_event {
+	all p: Phase | one e: Event | p = e.phase
+}
+
+
+// next phase must be in the same event
+fact next_phase_in_same_event {
+	all e: Event, p, p': Phase | p in e.phase and p' in p.^nextPhase => p' in e.phase 
+}
 
 //i think this should already be covered by phase/time properties
 fact startTime_not_endTime{
@@ -108,14 +123,16 @@ fact score_only_exists_with_its_performance {
 	all s: Score | one p: Performance | s = p.score
 }
 
+/*
 fact performance_is_only_in_one_phase {
 	all disj p,p':Phase | p.performance != p'.performance
 }
+*/
 
 
 // A performance only exists as part of a phase
 fact performace_part_of_a_phase {
-	all pe: Performance | some pa: Phase | pe in pa.performance
+	all pe: Performance | one pa: Phase | pe in pa.performance
 }
 
 // Each location must have some performances

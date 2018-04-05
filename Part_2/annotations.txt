@@ -9,10 +9,15 @@ S: inPhase: should be formulated as a fact
 
 facts:
 
+phase_only_with_event
+S: this is somehow to restrictive but i don't know how
+
 startTime_not_endTime
 J: i think this should already be covered by phase/time properties
 S: i think so too; didnt test it though
 
+performance_is_only_in_one_phase
+S: i think this is redundant with the fact performace_part_of_a_phase
 
 events_in_one_discipline
 S: i think that's to restrictive, ie there should be more than one discipline in a event
