@@ -1,6 +1,5 @@
 General
 
-an athlete should only be able to participate in one team per event right?
 
 sig:
 S: inPhase: should be formulated as a fact
@@ -18,11 +17,11 @@ S: i think that's to restrictive, ie there should be more than one discipline in
 instances:
 
 4
-not sure about this one
+S: not sure about this one
 
 run:
 
-can be run with upper bound, should be done to do for checking
+S: can be run with upper bound, should be done to do for checking
 
 Ski Jumping
 
