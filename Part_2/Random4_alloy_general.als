@@ -6,16 +6,6 @@
  * make them extend other signatures.
  */
 
-/*
- * General questions:
- * 1) difference between static & dynamic, ie when to use fact & pred -> use fact for things that are always true &
- *    pred as bool to check temp or specific properties
- * 2) are there field restrictions? not realy
- * 3) what is best? -> it is the team(s) with the highest score of a phase (mostly only one!)
- * -> Email with how to use ordering incomming, wait!
- */
- 
-
 
 abstract sig Athlete {	
 	citizenOf: some Country
@@ -230,11 +220,9 @@ pred isBronzeMedal[m: Medal] {
 	m in BronzeMedal and #m >= 1
 }
 
-// True iff t is among the best teams in phase p.
-//TODO
+// True iff t is among the best teams in phase p. -> team(s) with the highest score 
+// Only for sport specific part
 pred isAmongBest[t: Team, p: Phase] {
-	//t in getBest[p]
-	//proposal without extra function
 	/*no t':Team - t | t in p.performance.teams
 				and t' in p.performance.teams 
 				and (add[p.performance.score.map[t'].distance,p.performance.score.map[t'].pointsFromJudges] > add[p.performance.score.map[t].distance,p.performance.score.map[t].pointsFromJudges])
@@ -301,7 +289,6 @@ pred static_instance_3 {
 }
 
 pred static_instance_4 {
-//TODO: check
 	some a: Athlete, d: Discipline | some disj t, t': Team | a in t.members and a in t'.members and
 										t in d.event.teams and t' in d.event.teams and
 										isGoldMedal[t.medals] and isGoldMedal[t'.medals]

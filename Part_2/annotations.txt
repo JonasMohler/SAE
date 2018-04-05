@@ -1,5 +1,8 @@
 General
 
+TODO:
+
+S: check instance 4
 
 sig:
 S: inPhase: should be formulated as a fact
@@ -24,6 +27,10 @@ run:
 S: can be run with upper bound, should be done to do for checking
 
 Ski Jumping
+
+TODO:
+
+S: instance 5
 
 
 
