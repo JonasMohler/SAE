@@ -170,8 +170,11 @@ fact no_start_without_team {
 
 //athletes can only be at one performance at a time
 fact athletes_at_only_one_place_a_time {
-	all a:Athlete, disj p,p':Performance | ((a in p.teams.members) and (a in p'.teams.members)) implies
-								((p.endTime in p'.startTime.^after) or ( p'.endTime in p.startTime.^after))
+	all a:Athlete,disj p,p':Performance | (a in p.teams.members and a in p'.teams.members ) implies 
+							(p.endTime in p'.startTime.^after or  p'.endTime in p.startTime.^after)							
+}
+fact no_medal_without_performance {
+	all m:Medal,e:Event,p:e.phase.performance,t:Team | (t in m.winner and m in e.medals) implies t in p.teams
 }
 
 fact teams_only_win_one_medal_per_event {
@@ -188,12 +191,16 @@ fact no_medals_without_event {
 
 fact male_teams_and_female_teams_different_events {
 	all e:Event, disj m,m': e.teams.members | m in FemaleAthlete iff m' in FemaleAthlete 
-						
+	all p:Performance, disj m,m':p.teams.members | m in FemaleAthlete iff m' in FemaleAthlete		
 								
 }
 
 fact no_medal_without_participation {
 	no t:Team,e:Event, m:e.medals | t in m.winner and not t in e.teams
+}
+
+fact teams_not_in_performance_if_not_in_event {
+	no t:Team,e:Event,p:Performance | t not in e.teams and t in p.teams and p in e.phase.performance
 }
 
 
@@ -233,7 +240,9 @@ pred isBronzeMedal[m: Medal] {
 // True iff t is among the best teams in phase p. -> team(s) with the highest score 
 // Only for sport specific part
 pred isAmongBest[t: Team, p: Phase] {
-
+	no t': Team - t | t in p.performance.teams
+			and t' in p.performance.teams
+			and p.performance.score.ranking[t'].total > p.performance.score.ranking[t].total
 }
 
 ///// Our Predicates /////
@@ -282,7 +291,7 @@ fun getWinner[m: Medal] : Team {m.winner
 /////////////////////////////////////////////////////////
 //Sport Specific
 
-sig SkiJumping extends Discipline {}//{event in (MensIndividualEvent + MensTeamEvent)}
+sig SkiJumping extends Discipline {}{event in (MensIndividualEvent + MensTeamEvent)}
 
 sig MensIndividualEvent extends Event {}{phase in (qualifyingPhase + finalPhase)}
 sig MensTeamEvent extends Event{} {phase in (qualifyingPhase + finalPhase)}
@@ -301,12 +310,12 @@ sig OverallPoints extends Score{
 }
 
 
-sig qualifyingPhase extends Phase {}
-sig finalPhase extends Phase {}
+sig qualifyingPhase extends Phase{}
+sig finalPhase extends Phase{}
 
 sig qualifyingRound extends Performance {}{ #teams = 50}
 sig finalFirstRound extends Performance {}{ #teams = 50}
-sig finalSecondRound extends Performance {} { #teams = 30}
+sig finalSecondRound extends Performance {}{ #teams = 30}
 
 
 /*
@@ -319,6 +328,12 @@ fact has_two_phases{
 	all e: SkiJumping.event |  #e.phase = 2
 }
 
+// there is exactly one qualy and one final phase
+fact has_one_final_one_qualy_phase{
+	all e: SkiJumping.event | #(e.phase & finalPhase) = 1 and #(e.phase & qualifyingPhase) = 1
+}
+
+
 // MensIndividuall has only one athlete per team
 fact only_one_member_in_individual{
 	all t: MensIndividualEvent.teams | #t.members = 1
@@ -329,37 +344,57 @@ fact four_member_in_team{
 	all t: MensTeamEvent.teams | #t.members = 4
 }
 
-// if a skiJumping performance it has an overall score and the list is as long as many teams there are
+// if a skiJumping performance it has an overall score and the list is as long as many teams there are participating
 fact skiPerformance_has_overallPoints{
-	all p: qualifyingRound | p.score in OverallPoints and #p.score.ranking = 50
+	all p: qualifyingRound | p.score in OverallPoints and #p.score.ranking = 40
 	all p: finalFirstRound | p.score in OverallPoints and #p.score.ranking = 50
 	all p: finalSecondRound | p.score in OverallPoints and #p.score.ranking = 30
 }
-
+/*
 // qualyPhase has eactly one performance
 fact qualy_only_one_performance{
 	all pa: qualifyingPhase | #pa.performance = 1
 }
+*/
+// qualyRound is only in qualyPhase
+fact qualyRound_only_in_qualyPhase {
+	all pa: qualifyingPhase | pa.performance in qualifyingRound
+}
+
 
 // finalPhase has eactly two performance
 fact final_has_two_performances{
 	all pa: finalPhase | #pa.performance = 2
 }
-
-// qualyRound is only in qualyPhase
-fact qualyRound_only_in_qualyPhase {
-	all pe: Performance, pa: qualifyingPhase | pe in pa.performance => pe in qualifyingRound
-}
-
+/*
 // finalRounds are only in finalPhase
 fact finalRounds_only_in_finalPhase {
-	all pe: Performance, pa: finalPhase | pe in pa.performance => pe in finalFirstRound or pe in finalSecondRound
+	all pa: finalPhase | #(pa.performance & finalFirstRound) = 1 and #(pa.performance & finalSecondRound) = 1
 }
+*/
 
 // qualyPhase is strictly before finalPhase
 fact qualyPhase_before_finalPhase {
 	all p, p': Phase | p in qualifyingPhase and p' in finalPhase => phaseIsBefore[p, p']
 }
+/*
+// firstFinalRound is strictly before finalSecondRound
+fact firstFinal_before_secondFinals{
+	all pa: finalPhase, f: finalFirstRound, s: finalSecondRound | f in pa.performance and s in pa.performance implies s.startTime in f.endTime.*after
+}
+*/
+
+fact medal_to_best {
+	all s:Discipline,e:s.event, gm:e.medals, t:e.teams,ffr:finalFirstRound,fsr:finalSecondRound |no t':e.teams - t |
+								s in SkiJumping
+								and ffr in e.phase.performance 
+								and fsr in e.phase.performance 
+								and gm in GoldMedal 
+								and t in gm.winner 
+								and (add[fsr.score.ranking[t'].total,fsr.score.ranking[t'].total] > add[fsr.score.ranking[t].total,fsr.score.ranking[t].total]  )
+}
+
+
 
 ////////////////////////////////////////////////////////
 //Instances
@@ -381,10 +416,7 @@ pred static_instance_3 {
 }
 
 pred static_instance_4 {
-/*	some a: Athlete, d: Discipline | some disj t, t': Team | a in t.members and a in t'.members and
-										t in d.event.teams and t' in d.event.teams and
-										isGoldMedal[t.medals] and isGoldMedal[t'.medals]
-*/
+
 	some a:Athlete, d:Discipline, disj e,e' :d.event, m:e.medals,m':e'.medals | m in GoldMedal and m' in GoldMedal and  a in m.winner.members and a in m'.winner.members	
 
 }
@@ -400,4 +432,4 @@ pred static_instance_6 {
 													and bm in BronzeMedal and #bm >= 1 
 }
 
-run static_instance_5 for 10 but exactly 1 SkiJumping
+run static_instance_4 for 10 but exactly 1 SkiJumping, 50 Team, 50 Athlete

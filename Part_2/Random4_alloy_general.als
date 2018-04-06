@@ -170,8 +170,11 @@ fact no_start_without_team {
 
 //athletes can only be at one performance at a time
 fact athletes_at_only_one_place_a_time {
-	all a:Athlete, disj p,p':Performance | ((a in p.teams.members) and (a in p'.teams.members)) implies
-								((p.endTime in p'.startTime.^after) or ( p'.endTime in p.startTime.^after))
+	all a:Athlete,disj p,p':Performance | (a in p.teams.members and a in p'.teams.members ) implies 
+							(p.endTime in p'.startTime.^after or  p'.endTime in p.startTime.^after)							
+}
+fact no_medal_without_performance {
+	all m:Medal,e:Event,p:e.phase.performance,t:Team | (t in m.winner and m in e.medals) implies t in p.teams
 }
 
 fact teams_only_win_one_medal_per_event {
@@ -188,12 +191,16 @@ fact no_medals_without_event {
 
 fact male_teams_and_female_teams_different_events {
 	all e:Event, disj m,m': e.teams.members | m in FemaleAthlete iff m' in FemaleAthlete 
-						
+	all p:Performance, disj m,m':p.teams.members | m in FemaleAthlete iff m' in FemaleAthlete		
 								
 }
 
 fact no_medal_without_participation {
 	no t:Team,e:Event, m:e.medals | t in m.winner and not t in e.teams
+}
+
+fact teams_not_in_performance_if_not_in_event {
+	no t:Team,e:Event,p:Performance | t not in e.teams and t in p.teams and p in e.phase.performance
 }
 
 
@@ -294,14 +301,11 @@ pred static_instance_2 {
 }
 
 pred static_instance_3 {
-	some c:Country | all e:Event | c not in e.teams.country 
+	some c:Country | no a:Athlete | c in a.citizenOf
 }
 
 pred static_instance_4 {
-/*	some a: Athlete, d: Discipline | some disj t, t': Team | a in t.members and a in t'.members and
-										t in d.event.teams and t' in d.event.teams and
-										isGoldMedal[t.medals] and isGoldMedal[t'.medals]
-*/
+
 	some a:Athlete, d:Discipline, disj e,e' :d.event, m:e.medals,m':e'.medals | m in GoldMedal and m' in GoldMedal and  a in m.winner.members and a in m'.winner.members	
 
 }
@@ -309,5 +313,5 @@ pred show{
 
 }
 
-run static_instance_4 for 6 but 3 Country, 2 Performance
+run static_instance_4 for 6 but 3 Country, 2 Performance, 1 Discipline, 2 Event, 4 Team
 
