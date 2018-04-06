@@ -29,14 +29,14 @@ sig Event {
 }
 
 sig Score{
-	inPerformance: one Performance
+//	inPerformance: one Performance
 }
 
 sig Location {}
 
 abstract sig Medal {
 	winner: one Team,
-	event: one Event 
+//	event: one Event 
 }
 
 sig BronzeMedal, SilverMedal, GoldMedal extends Medal {}
@@ -53,7 +53,7 @@ sig Performance {
 sig Phase {
 	performance: some Performance,
 	nextPhase: lone Phase,
-	inEvent: one Event
+//	inEvent: one Event
 
 }
 
@@ -76,13 +76,13 @@ sig Time {
 
 // event only exists as a part of a discipline
 fact event_only_with_discipline {
-//	all e: Event | one d: Discipline | e = d.event
+	all e: Event | one d: Discipline | e = d.event
 }
 
 //follows from model with phase {some performance}
 //phase only exists as a part of an event
 fact phase_only_with_event {
-//	all p: Phase | one e: Event | p = e.phase
+	all p: Phase | one e: Event | p = e.phase
 }
 
 
@@ -104,7 +104,7 @@ fact no_unisex_teams{
 
 //events exclusive to disciplines
 fact events_in_one_discipline {
-//	all disj d,d':Discipline | d.event != d'.event
+	all disj d,d':Discipline | d.event != d'.event
 }
 
 //medals belong to a specific event
@@ -130,7 +130,7 @@ fact performance_score_relation {
 
 // A score only exists if its performance exists
 fact score_only_exists_with_its_performance {
-//	all s: Score | one p: Performance | s = p.score
+	all s: Score | one p: Performance | s = p.score
 }
 
 
@@ -144,7 +144,7 @@ fact performances_teams_relation {
 
 // A performance only exists as part of a phase
 fact performace_part_of_a_phase {
-//	all pe: Performance | one pa: Phase | pe in pa.performance
+	all pe: Performance | one pa: Phase | pe in pa.performance
 }
 
 // Each location must have some performances
@@ -191,7 +191,7 @@ fact phase_time_ordering {
 
 // There must be at least 3 medals & 3 teams per event
 fact three_medals_and_teams_per_event {
-//	all e: Event | #e.medals >= 3 and #e.teams >= 3
+	all e: Event | #e.medals >= 3 and #e.teams >= 3
 }
 
 
@@ -353,7 +353,7 @@ pred static_instance_4 {
 }
 pred show{}
 
-run static_instance_2 for  10 but 9 Medal, 3 Team , 3 Event
+run static_instance_2 for  20 
 
 
 
