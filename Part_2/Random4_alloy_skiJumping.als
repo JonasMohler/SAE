@@ -6,6 +6,7 @@
  * make them extend other signatures.
  */
 
+module util/integer
 
 abstract sig Athlete {	
 	citizenOf: some Country
@@ -24,15 +25,19 @@ sig Discipline {
 sig Event {
 	phase: some Phase,
 	teams: set Team,
-	medals: set Medal,
+	medals: some Medal,
+	inDiscipline: one Discipline
 }
 
-sig Score{}
+sig Score{
+	inPerformance: one Performance
+}
 
 sig Location {}
 
 abstract sig Medal {
-	winner: one Team 
+	winner: one Team,
+	event: one Event 
 }
 
 sig BronzeMedal, SilverMedal, GoldMedal extends Medal {}
@@ -47,14 +52,15 @@ sig Performance {
 }
 
 sig Phase {
-	performance: set Performance,
+	performance: some Performance,
 	nextPhase: lone Phase,
+	inEvent: one Event
 
 }
 
 sig Team {
 	members: some Athlete,
-	country: Country,
+	country: one Country,
 	medals: set Medal,
 	performances: some Performance
 }
@@ -69,16 +75,31 @@ sig Time {
 * facts
 */
 
+// event only exists as a part of a discipline
+fact event_only_with_discipline {
+//	all e: Event | one d: Discipline | e in d.event
+}
+
+//phase only exists as a part of an event
+fact phase_only_with_event {
+//	all p: Phase | one e: Event | p in e.phase
+}
+
+
+// next phase must be in the same event
+fact next_phase_in_same_event {
+	all e: Event, p, p': Phase | (p in e.phase and p' in p.^nextPhase) => p' in e.phase 
+}
 
 //i think this should already be covered by phase/time properties
 fact startTime_not_endTime{
-	all p:Performance | p.startTime != p.endTime
+//	all p:Performance | p.startTime != p.endTime
 }
 
+
 // a team consists of either male or female athletes.
-fact no_unisex_events{
-	all e:Event | all disj m,m':e.teams.members | (m in FemaleAthlete implies m' in FemaleAthlete)
-									and (m in MaleAthlete implies m' in MaleAthlete)
+fact no_unisex_teams{
+	all t:Team |all m,m':t.members | m in FemaleAthlete iff m' in FemaleAthlete
 }
 
 //events exclusive to disciplines
@@ -103,19 +124,28 @@ fact performance_phase_relation {
 }
 
 
+fact performance_score_relation {
+	all p:Performance,s:Score | p in s.inPerformance iff s in p.score
+}
+
+
 // A score only exists if its performance exists
 fact score_only_exists_with_its_performance {
 	all s: Score | one p: Performance | s = p.score
 }
 
+
 fact performance_is_only_in_one_phase {
-	all disj p,p':Phase | p.performance != p'.performance
+//	all disj p,p':Phase | p.performance != p'.performance
 }
 
+fact performances_teams_relation {
+	all t:Team,p:Performance | t in p.teams iff p in t.performances
+}
 
 // A performance only exists as part of a phase
 fact performace_part_of_a_phase {
-	all pe: Performance | some pa: Phase | pe in pa.performance
+	all pe: Performance | one pa: Phase | pe in pa.performance
 }
 
 // Each location must have some performances
@@ -123,12 +153,24 @@ fact location_has_some_performances {
 	all l: Location | some p: Performance | l = p.location
 }
 
+/*
 // Medals are correctly distributed
 fact medal_distribution {
 	all e:Event | #(GoldMedal & e.medals) >= 1
 	all e: Event | #(GoldMedal & e.medals) = 1 implies ((#(SilverMedal & e.medals) = 1 and #(BronzeMedal & e.medals) >= 1) or (#(SilverMedal & e.medals) >= 2 and #(BronzeMedal & e.medals) = 0))
 	all e:Event | #(GoldMedal & e.medals) = 2 implies (#(SilverMedal & e.medals)  = 0 and #(BronzeMedal & e.medals) >= 1)
 	all e:Event | #(GoldMedal & e.medals) >= 3 implies (#(SilverMedal & e.medals) = 0 and #(BronzeMedal & e.medals) = 0)
+}
+*/
+/*
+fact medal_distribution {
+	all e:Event | (#(GoldMedal & e.medals) = 1 and ((#(SilverMedal & e.medals) = 1) and #(BronzeMedal & e.medals) >= 1) or (#(SilverMedal & e.medals) >= 2 and #(BronzeMedal & e.medals) = 0))
+			or (#(GoldMedal & e.medals) = 2 and #(SilverMedal & e.medals)  = 0 and #(BronzeMedal & e.medals) >= 1) 
+			or (#(GoldMedal & e.medals) >= 3 and #(SilverMedal & e.medals)  = 0 and #(BronzeMedal & e.medals) = 0) 
+}
+*/
+fact medal_event_relation {
+	all e:Event,m:Medal | e in m.event iff m in e.medals
 }
 
 //times are ordered
@@ -151,7 +193,7 @@ fact phase_time_ordering {
 
 // There must be at least 3 medals & 3 teams per event
 fact three_medals_and_teams_per_event {
-	all e: Event | #e.medals >= 3 and #e.teams >= 3
+//	all e: Event | #e.medals >= 3 and #e.teams >= 3
 }
 
 
@@ -188,6 +230,22 @@ fact team_country_athletes {
 }
 
 
+//athletes can only be at one performance at a time
+fact athletes_at_only_one_place_a_time {
+	all a:Athlete, disj p,p':Performance | ((a in p.teams.members) and (a in p'.teams.members)) implies
+								((p.endTime in p'.startTime.^after) or ( p'.endTime in p.startTime.^after))
+}
+
+fact event_in_discipline_if_discipline_has_event {
+	all e:Event,d:Discipline | d in e.inDiscipline iff e in d.event
+}
+
+fact teams_only_win_one_medal_per_event {
+	all e:Event, t:Team | #(t.medals & e.medals) <= 1
+}
+
+
+
 
 /*
  * Predicates
@@ -196,12 +254,14 @@ fact team_country_athletes {
 
 // True iff t1 is strictly before t2.
 pred isBefore[t1, t2: Time] {
-	t2 in t1.^after and not t1 in t2.^after	
+	t2 in t1.^after //and not t1 in t2.^after	
 }
 
+//I thin the and nots might not be necessary
 // True iff p1 is strictly before p2.
 pred phaseIsBefore[p1, p2: Phase] {
-	p2 in p1.^nextPhase and not p1 in p2.^nextPhase
+
+	p2 in p1.^nextPhase //and not p1 in p2.^nextPhase
 }
 
 // True iff m is a gold medal.
@@ -222,10 +282,10 @@ pred isBronzeMedal[m: Medal] {
 // True iff t is among the best teams in phase p. -> team(s) with the highest score 
 // Only for sport specific part
 pred isAmongBest[t: Team, p: Phase] {
-	no t':Team - t | t in p.performance.teams
+	/*no t':Team - t | t in p.performance.teams
 				and t' in p.performance.teams 
 				and (add[p.performance.score.map[t'].distance,p.performance.score.map[t'].pointsFromJudges] > add[p.performance.score.map[t].distance,p.performance.score.map[t].pointsFromJudges])
-	
+	*/
 }
 
 ///// Our Predicates /////
@@ -268,19 +328,27 @@ fun getMembers[t: Team] : set Athlete { t.members}
 // Returns the team which won the medal m.
 fun getWinner[m: Medal] : Team {m.winner}
 
-
 /////////////////////////////////////////////////////////
 //Sport Specific
 
-sig SkiJumping extends Discipline {}
+sig SkiJumping extends Discipline {}{event in (MensIndividualEvent + MensTeamEvent)}
 
-sig MensIndividualEvent extends Event {} 
-sig MensTeamEvent extends Event{} 
+sig MensIndividualEvent extends Event {}{phase in (qualifyingPhase + finalPhase)}
+sig MensTeamEvent extends Event{} {phase in (qualifyingPhase + finalPhase)}
 
-sig overallPoints{
+sig Points{
+	total = distance.add[pointsFromJudges],
 	distance: Int,
 	pointsFromJudges: Int	
+}{
+	distance >= 0 and
+	pointsFromJudges >=0
 }
+
+sig OverallPoints extends Score{
+	ranking: Points -> Team
+}
+
 
 sig qualifyingPhase extends Phase {}
 sig finalPhase extends Phase {}
@@ -288,6 +356,37 @@ sig finalPhase extends Phase {}
 sig qualifyingRound extends Performance {}{ #teams = 50}
 sig finalFirstRound extends Performance {}{ #teams = 50}
 sig finalSecondRound extends Performance {} { #teams = 30}
+
+
+/*
+facts
+*/
+
+
+// SkiJumping Events has exactly 2 phase
+fact has_two_phases{
+	all e: SkiJumping.event |  #e.phase = 2
+}
+
+// MensIndividuall has only one athlete per team
+fact only_one_member_in_individual{
+	all t: MensIndividualEvent.teams | #t.members = 1
+}
+
+// MensTeam has 4 athlete per team
+fact four_member_in_team{
+	all t: MensTeamEvent.teams | #t.members = 4
+}
+
+// qualyPhase has eactly one performance
+fact qualy_only_one_performance{
+	all pa: qualifyingPhase | #pa.performance = 1
+}
+
+// finalPhase has eactly two performance
+fact final_has_two_performances{
+	all pa: finalPhase | #pa.performance = 2
+}
 
 // qualyRound is only in qualyPhase
 fact qualyRound_only_in_qualyPhase {
@@ -306,6 +405,8 @@ fact qualyPhase_before_finalPhase {
 
 ////////////////////////////////////////////////////////
 //Instances
+
+//Instances
 pred static_instance_1 {
 	//impossible, as no more than one performance can be at a single location at any point in time
 	#Performance = 7
@@ -316,7 +417,7 @@ pred static_instance_1 {
 pred static_instance_2 {
 	some a:Athlete | some disj p,p':Performance | a in p.teams.members 
 										and a in p'.teams.members
-										and p.endTime.after = p'.startTime
+										and p.startTime.after = p'.endTime
 }
 
 pred static_instance_3 {
@@ -331,7 +432,7 @@ pred static_instance_4 {
 }
 
 pred static_instance_5 {
-	some t: Team | 
+
 	
 }
 
@@ -341,7 +442,4 @@ pred static_instance_6 {
 													and bm in BronzeMedal and #bm >= 1 
 }
 
-run static_instance_3
-
-
-
+run static_instance_3 for 10 but exactly 1 SkiJumping
