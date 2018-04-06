@@ -22,6 +22,9 @@ S: i think this is redundant with the fact performace_part_of_a_phase
 events_in_one_discipline
 S: i think that's to restrictive, ie there should be more than one discipline in a event
 
+pred:
+S: isBefore doesn't work properly
+
 instances:
 
 4
@@ -36,6 +39,8 @@ Ski Jumping
 TODO:
 
 S: instance 5
+S: which team proceed to next round
+S: ordering of rounds
 
 
 

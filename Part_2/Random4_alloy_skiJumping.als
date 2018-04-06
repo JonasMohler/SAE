@@ -201,7 +201,6 @@ pred isBefore[t1, t2: Time] {
 
 // True iff p1 is strictly before p2.
 pred phaseIsBefore[p1, p2: Phase] {
-
 	p2 in p1.^nextPhase and not p1 in p2.^nextPhase
 }
 
@@ -223,10 +222,10 @@ pred isBronzeMedal[m: Medal] {
 // True iff t is among the best teams in phase p. -> team(s) with the highest score 
 // Only for sport specific part
 pred isAmongBest[t: Team, p: Phase] {
-	/*no t':Team - t | t in p.performance.teams
+	no t':Team - t | t in p.performance.teams
 				and t' in p.performance.teams 
 				and (add[p.performance.score.map[t'].distance,p.performance.score.map[t'].pointsFromJudges] > add[p.performance.score.map[t].distance,p.performance.score.map[t].pointsFromJudges])
-	*/
+	
 }
 
 ///// Our Predicates /////
@@ -283,9 +282,27 @@ sig overallPoints{
 	pointsFromJudges: Int	
 }
 
-sig qualifyingPhase extends Phase {}{ #performance.teams = 50}
-sig finalFirstPhase extends Phase {}{ #performance.teams = 50}
-sig finalSecondPhase extends Phase {}{ #performance.teams = 30}
+sig qualifyingPhase extends Phase {}
+sig finalPhase extends Phase {}
+
+sig qualifyingRound extends Performance {}{ #teams = 50}
+sig finalFirstRound extends Performance {}{ #teams = 50}
+sig finalSecondRound extends Performance {} { #teams = 30}
+
+// qualyRound is only in qualyPhase
+fact qualyRound_only_in_qualyPhase {
+	all pe: Performance, pa: qualifyingPhase | pe in pa.performance => pe in qualifyingRound
+}
+
+// finalRounds are only in finalPhase
+fact finalRounds_only_in_finalPhase {
+	all pe: Performance, pa: finalPhase | pe in pa.performance => pe in finalFirstRound or pe in finalSecondRound
+}
+
+// qualyPhase is strictly before finalPhase
+fact qualyPhase_before_finalPhase {
+	all p, p': Phase | p in qualifyingPhase and p' in finalPhase => phaseIsBefore[p, p']
+}
 
 ////////////////////////////////////////////////////////
 //Instances
@@ -314,8 +331,7 @@ pred static_instance_4 {
 }
 
 pred static_instance_5 {
-	//TODO
-	//probably should not be possible
+	some t: Team | 
 	
 }
 
