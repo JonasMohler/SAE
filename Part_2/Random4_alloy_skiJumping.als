@@ -282,10 +282,10 @@ pred isBronzeMedal[m: Medal] {
 // True iff t is among the best teams in phase p. -> team(s) with the highest score 
 // Only for sport specific part
 pred isAmongBest[t: Team, p: Phase] {
-	/*no t':Team - t | t in p.performance.teams
+	no t':Team - t | t in p.performance.teams
 				and t' in p.performance.teams 
-				and (add[p.performance.score.map[t'].distance,p.performance.score.map[t'].pointsFromJudges] > add[p.performance.score.map[t].distance,p.performance.score.map[t].pointsFromJudges])
-	*/
+				and (p.performance.score.ranking[t].total > p.performance.score.ranking[t'].total )
+	
 }
 
 ///// Our Predicates /////
@@ -331,7 +331,7 @@ fun getWinner[m: Medal] : Team {m.winner}
 /////////////////////////////////////////////////////////
 //Sport Specific
 
-sig SkiJumping extends Discipline {}{event in (MensIndividualEvent + MensTeamEvent)}
+sig SkiJumping extends Discipline {}//{event in (MensIndividualEvent + MensTeamEvent)}
 
 sig MensIndividualEvent extends Event {}{phase in (qualifyingPhase + finalPhase)}
 sig MensTeamEvent extends Event{} {phase in (qualifyingPhase + finalPhase)}
@@ -346,7 +346,7 @@ sig Points{
 }
 
 sig OverallPoints extends Score{
-	ranking: Points -> Team
+	ranking: Team one -> one Points
 }
 
 
@@ -376,6 +376,13 @@ fact only_one_member_in_individual{
 // MensTeam has 4 athlete per team
 fact four_member_in_team{
 	all t: MensTeamEvent.teams | #t.members = 4
+}
+
+// if a skiJumping performance it has an overall score and the list is as long as many teams there are
+fact skiPerformance_has_overallPoints{
+	all p: qualifyingRound | p.score in OverallPoints and #p.score.ranking = 50
+	all p: finalFirstRound | p.score in OverallPoints and #p.score.ranking = 50
+	all p: finalSecondRound | p.score in OverallPoints and #p.score.ranking = 30
 }
 
 // qualyPhase has eactly one performance
@@ -432,7 +439,7 @@ pred static_instance_4 {
 }
 
 pred static_instance_5 {
-
+	some d: SkiJumping | some e: d.event | some t: e.teams, p: e.phase| (GoldMedal in e.medals and GoldMedal.winner = t) and not isAmongBest[t, p]
 	
 }
 
@@ -442,4 +449,4 @@ pred static_instance_6 {
 													and bm in BronzeMedal and #bm >= 1 
 }
 
-run static_instance_3 for 10 but exactly 1 SkiJumping
+run static_instance_5 for 10 but exactly 1 SkiJumping
