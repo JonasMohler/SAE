@@ -29,14 +29,14 @@ sig Event {
 }
 
 sig Score{
-//	inPerformance: one Performance
+	inPerformance: one Performance
 }
 
 sig Location {}
 
 abstract sig Medal {
 	winner: one Team,
-//	event: one Event 
+	event: one Event 
 }
 
 sig BronzeMedal, SilverMedal, GoldMedal extends Medal {}
@@ -53,7 +53,7 @@ sig Performance {
 sig Phase {
 	performance: some Performance,
 	nextPhase: lone Phase,
-//	inEvent: one Event
+	inEvent: one Event
 
 }
 
@@ -76,13 +76,12 @@ sig Time {
 
 // event only exists as a part of a discipline
 fact event_only_with_discipline {
-	all e: Event | one d: Discipline | e = d.event
+//	all e: Event | one d: Discipline | e in d.event
 }
 
-//follows from model with phase {some performance}
 //phase only exists as a part of an event
 fact phase_only_with_event {
-	all p: Phase | one e: Event | p = e.phase
+//	all p: Phase | one e: Event | p in e.phase
 }
 
 
@@ -123,6 +122,7 @@ fact performance_phase_relation {
 	all pe:Performance, pa:Phase | pe in pa.performance iff pa in pe.inPhase
 }
 
+
 fact performance_score_relation {
 	all p:Performance,s:Score | p in s.inPerformance iff s in p.score
 }
@@ -135,7 +135,7 @@ fact score_only_exists_with_its_performance {
 
 
 fact performance_is_only_in_one_phase {
-	all disj p,p':Phase | p.performance != p'.performance
+//	all disj p,p':Phase | p.performance != p'.performance
 }
 
 fact performances_teams_relation {
@@ -161,12 +161,13 @@ fact medal_distribution {
 	all e:Event | #(GoldMedal & e.medals) >= 3 implies (#(SilverMedal & e.medals) = 0 and #(BronzeMedal & e.medals) = 0)
 }
 */
+/*
 fact medal_distribution {
 	all e:Event | (#(GoldMedal & e.medals) = 1 and ((#(SilverMedal & e.medals) = 1) and #(BronzeMedal & e.medals) >= 1) or (#(SilverMedal & e.medals) >= 2 and #(BronzeMedal & e.medals) = 0))
 			or (#(GoldMedal & e.medals) = 2 and #(SilverMedal & e.medals)  = 0 and #(BronzeMedal & e.medals) >= 1) 
 			or (#(GoldMedal & e.medals) >= 3 and #(SilverMedal & e.medals)  = 0 and #(BronzeMedal & e.medals) = 0) 
 }
-
+*/
 fact medal_event_relation {
 	all e:Event,m:Medal | e in m.event iff m in e.medals
 }
@@ -191,7 +192,7 @@ fact phase_time_ordering {
 
 // There must be at least 3 medals & 3 teams per event
 fact three_medals_and_teams_per_event {
-	all e: Event | #e.medals >= 3 and #e.teams >= 3
+//	all e: Event | #e.medals >= 3 and #e.teams >= 3
 }
 
 
@@ -353,7 +354,7 @@ pred static_instance_4 {
 }
 pred show{}
 
-run static_instance_2 for  20 
+run static_instance_2 for 10
 
 
 
