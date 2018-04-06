@@ -113,9 +113,10 @@ fact location_has_some_performances {
 
 // Medals are correctly distributed
 fact medal_distribution {
-	all e:Event | (#(GoldMedal & e.medals) = 1 and ((#(SilverMedal & e.medals) = 1) and #(BronzeMedal & e.medals) >= 1) or (#(SilverMedal & e.medals) >= 2 and #(BronzeMedal & e.medals) = 0))
-			or (#(GoldMedal & e.medals) = 2 and #(SilverMedal & e.medals)  = 0 and #(BronzeMedal & e.medals) >= 1) 
-			or (#(GoldMedal & e.medals) >= 3 and #(SilverMedal & e.medals)  = 0 and #(BronzeMedal & e.medals) = 0) 
+	all e:Event | #(GoldMedal & e.medals) >0
+	all e:Event | (#(GoldMedal & e.medals) = 1 implies ((#(SilverMedal & e.medals) = 1) and #(BronzeMedal & e.medals) >= 1) or (#(SilverMedal & e.medals) >= 2 and #(BronzeMedal & e.medals) = 0))
+	all e:Event | (#(GoldMedal & e.medals) = 2 implies #(SilverMedal & e.medals)  = 0 and #(BronzeMedal & e.medals) >= 1) 
+	all e:Event | (#(GoldMedal & e.medals) >= 3 implies #(SilverMedal & e.medals)  = 0 and #(BronzeMedal & e.medals) = 0) 
 }
 
 
