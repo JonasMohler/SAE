@@ -432,4 +432,4 @@ pred static_instance_6 {
 													and bm in BronzeMedal and #bm >= 1 
 }
 
-run static_instance_4 for 10 but exactly 1 SkiJumping, 50 Team, 50 Athlete
+run static_instance_6 for 10 but exactly 1 SkiJumping, 50 Team
